@@ -4,11 +4,12 @@ use std::path::Path;
 
 #[derive(Debug)]
 struct Position {
-    hpos: u32,
+    aim: u32,
     depth: u32,
+    hpos: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Move {
     kind: MoveKind,
     unit: u32,
@@ -26,7 +27,7 @@ impl Move {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum MoveKind {
     Forward,
     Down,
@@ -64,7 +65,11 @@ impl From<&str> for Move {
 
 impl Default for Position {
     fn default() -> Self {
-        Position { hpos: 0, depth: 0 }
+        Position {
+            aim: 0,
+            hpos: 0,
+            depth: 0,
+        }
     }
 }
 
@@ -96,21 +101,43 @@ fn main() {
     }
 
     let moves: Vec<Move> = content.split('\n').map(|x| Move::from(x)).collect();
+    let moves_part2 = moves.clone();
 
-    let mut position = Position::new();
+    let mut position_part1 = Position::new();
+    let mut position_part2 = Position::new();
 
+    // Part 1
     for mov in moves {
         match mov.kind {
-            MoveKind::Forward => position.hpos += mov.unit,
-            MoveKind::Down => position.depth += mov.unit,
-            MoveKind::Up => position.depth -= mov.unit,
+            MoveKind::Forward => position_part1.hpos += mov.unit,
+            MoveKind::Down => position_part1.depth += mov.unit,
+            MoveKind::Up => position_part1.depth -= mov.unit,
         }
     }
 
     println!(
-        "At the end : Horizontal position is [{}], Depth is [{}] so the ansmwer is [{}]",
-        position.hpos,
-        position.depth,
-        position.hpos * position.depth
+        "PART 1 - At the end : Horizontal position is [{}], Depth is [{}] so the ansmwer is [{}]",
+        position_part1.hpos,
+        position_part1.depth,
+        position_part1.hpos * position_part1.depth
+    );
+
+    // Part 2
+    for mov in moves_part2 {
+        match mov.kind {
+            MoveKind::Forward => {
+                position_part2.hpos += mov.unit;
+                position_part2.depth += position_part2.aim * mov.unit;
+            }
+            MoveKind::Down => position_part2.aim += mov.unit,
+            MoveKind::Up => position_part2.aim -= mov.unit,
+        }
+    }
+
+    println!(
+        "PART 2 - At the end : Horizontal position is [{}], Depth is [{}] so the ansmwer is [{}]",
+        position_part2.hpos,
+        position_part2.depth,
+        position_part2.hpos * position_part2.depth
     );
 }
