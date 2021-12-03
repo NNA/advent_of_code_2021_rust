@@ -47,18 +47,18 @@ pub fn main() {
 }
 
 fn extract_binary_rates(frequency_array: [[u16; 2]; 12]) -> (String, String) {
-    let mut gamma = ['0'; 12];
-    let mut epsilon = ['0'; 12];
+    let mut gamma = String::with_capacity(12);
+    let mut epsilon = String::with_capacity(12);
 
-    for (i, frequency) in frequency_array.iter().enumerate() {
+    for frequency in frequency_array.iter() {
         if frequency[0] > frequency[1] {
-            gamma[i] = '1';
-            epsilon[i] = '0';
+            gamma.push('1');
+            epsilon.push('0');
         } else {
-            gamma[i] = '0';
-            epsilon[i] = '1';
+            gamma.push('0');
+            epsilon.push('1');
         }
     }
 
-    (gamma.into_iter().collect(), epsilon.into_iter().collect())
+    (gamma, epsilon)
 }
