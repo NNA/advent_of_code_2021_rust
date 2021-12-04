@@ -44,6 +44,85 @@ pub fn main() {
         epsilon,
         gamma * epsilon
     );
+
+    // Part 2
+    let split_content_oxygen: Vec<&str> = content.split('\n').collect();
+
+    let mut oxygen_rating = String::new();
+
+    for i in 0..=11 {
+        let mut zero_count = 0;
+        let mut one_count = 0;
+        let mut candidates_count = 0;
+        let mut last_candidate: &str = "";
+        for bin_number in &split_content_oxygen {
+            if !bin_number.starts_with(&oxygen_rating) {
+                continue;
+            }
+            candidates_count += 1;
+            last_candidate = bin_number;
+            match bin_number.chars().nth(i) {
+                Some(c) => match c {
+                    '0' => zero_count += 1,
+                    '1' => one_count += 1,
+                    _ => panic!("invalid binary number"),
+                },
+                None => (),
+            }
+        }
+        if candidates_count == 1 {
+            oxygen_rating = last_candidate.to_string();
+            break;
+        }
+        if zero_count > one_count {
+            oxygen_rating.push('0')
+        } else {
+            oxygen_rating.push('1')
+        }
+    }
+
+    let mut co2_rating = String::new();
+
+    for i in 0..=11 {
+        let mut zero_count = 0;
+        let mut one_count = 0;
+        let mut candidates_count = 0;
+        let mut last_candidate: &str = "";
+        for bin_number in &split_content_oxygen {
+            if !bin_number.starts_with(&co2_rating) {
+                continue;
+            }
+            candidates_count += 1;
+            last_candidate = bin_number;
+            match bin_number.chars().nth(i) {
+                Some(c) => match c {
+                    '0' => zero_count += 1,
+                    '1' => one_count += 1,
+                    _ => panic!("invalid binary number"),
+                },
+                None => (),
+            }
+        }
+        if candidates_count == 1 {
+            co2_rating = last_candidate.to_string();
+            break;
+        }
+        if zero_count > one_count {
+            co2_rating.push('1')
+        } else {
+            co2_rating.push('0')
+        }
+    }
+
+    let oxygen = u32::from_str_radix(oxygen_rating.as_str(), 2).unwrap();
+    let co2 = u32::from_str_radix(co2_rating.as_str(), 2).unwrap();
+
+    println!(
+        "PART 2 - At the end : oxygen & co2 are [{:?}, {:?}] so number is [{}]",
+        oxygen,
+        co2,
+        oxygen * co2
+    );
 }
 
 fn extract_binary_rates(frequency_array: [[u16; 2]; 12]) -> (String, String) {
