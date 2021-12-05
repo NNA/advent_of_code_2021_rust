@@ -16,7 +16,6 @@ fn main() {
         column_count: Option<u16>,
         index: GridIndex,
         content: [[Option<u16>; 5]; 5],
-        removeds: Vec<u16>,
     }
 
     #[derive(Debug, PartialEq, Hash, Clone)]
@@ -43,14 +42,11 @@ fn main() {
 
         fn remove_number(&mut self, value: u16) -> Option<Coordinate> {
             // Seek & Remove from index
-            // let coord = self.index.remove(&value).unwrap();
             match self.index.remove(&value) {
                 None => None,
                 Some(coord) => {
-                    println!("coord wil be removed {:?}", coord);
                     // Remove from content
                     self.content[coord.row as usize][coord.column as usize] = None;
-                    self.removeds.push(value);
                     Some(coord)
                 }
             }
@@ -76,7 +72,6 @@ fn main() {
                 column_count: None,
                 index: HashMap::new(),
                 content: [[Some(0 as u16); 5]; 5],
-                removeds: vec![],
             }
         }
     }
@@ -99,6 +94,7 @@ fn main() {
     let mut row_number = 0;
 
     // Part 1
+    // Parse input & prepare grids
     for (pos, input_part) in content.split('\n').enumerate() {
         if pos == 0 {
             // First the numbers
@@ -107,31 +103,21 @@ fn main() {
                 .map(|x| -> u16 { x.parse().unwrap() })
                 .collect();
         } else {
-            println!("input {:?}", input_part);
             if input_part == "" {
-                println!("input is empty");
                 match grids.pop() {
                     Some(grid) => {
-                        println!("  grids are not empty => put it back & reset row number");
                         grids.push(grid);
                         row_number = 0;
                     }
-                    None => {
-                        println!("  grids is empty => put it back & create a new grid");
-                    }
+                    None => (),
                 }
                 grids.push(Grid::new());
             } else {
-                println!("input is not empty");
+                // Input is not empty
                 // We are on a grid row
                 match grids.pop() {
                     Some(mut grid) => {
-                        println!("grid exists !!");
                         for (col, number_str) in input_part.split_whitespace().enumerate() {
-                            println!(
-                                "row {:?} col {:?} => adding number {:?}",
-                                row_number, col, number_str
-                            );
                             grid.add_number(row_number, col as u16, number_str.parse().unwrap())
                         }
                         grids.push(grid);
@@ -143,35 +129,23 @@ fn main() {
         }
     }
 
+    // Check grids
     'outer: for number in numbers {
-        let mut grid_num = 0;
         for grid in &mut grids {
-            println!("looking for grid {:?}", grid_num);
-            // println!("Removing {:?} from {:?}", number, grid);
             let coord = &grid.remove_number(number);
-            // println!("Coord {:?}", coord);
             if coord.is_some() {
                 let c = coord.as_ref().unwrap();
                 if grid.is_row_complete(c.row) || grid.is_column_complete(c.column) {
-                    println!("complete");
                     let sum: u16 = grid.index.keys().sum();
-                    println!("sum is {:?}", sum);
-                    println!("number is {:?}", number);
-                    let solution = sum * number;
-                    println!("Solution number is {:?}", solution);
+                    println!(
+                        "For Part 1 : sum is [{}], last number was [{}] so solution is [{}]",
+                        sum,
+                        number,
+                        sum * number
+                    );
                     break 'outer;
-                } else {
-                    println!("not complete");
                 }
             }
-            grid_num += 1;
         }
     }
-
-    // println!("last number {:?}", last_number);
-    // println!("first_complete_grid {:?}", first_complete_grid);
-
-    // println!("Grids {:?}", grids);
-
-    // println!("Numbers {:?}", numbers);
 }
