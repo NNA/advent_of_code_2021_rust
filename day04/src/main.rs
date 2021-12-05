@@ -93,7 +93,6 @@ fn main() {
     let mut grids: Vec<Grid> = vec![];
     let mut row_number = 0;
 
-    // Part 1
     // Parse input & prepare grids
     for (pos, input_part) in content.split('\n').enumerate() {
         if pos == 0 {
@@ -129,7 +128,10 @@ fn main() {
         }
     }
 
-    // Check grids
+    let part2_numbers = numbers.clone();
+    let mut part2_grids = grids.clone();
+
+    // Part 1: Check grids until first complete grid
     'outer: for number in numbers {
         for grid in &mut grids {
             let coord = &grid.remove_number(number);
@@ -148,4 +150,34 @@ fn main() {
             }
         }
     }
+
+    type GridResult = HashMap<u16, u32>;
+
+    let mut grid_number: u16 = 0; // Used to set an incremental id for each grid
+    let mut grid_results: GridResult = HashMap::new(); // Used to store and retrieve a result based on "grid id"
+    let mut last_grid_number: u16 = 0; // Used to retain last grid number added to results
+
+    // Part 2: Check grids until end of numbers, then retrieve last
+    for number in part2_numbers {
+        for grid in &mut part2_grids {
+            let coord = &grid.remove_number(number);
+            if coord.is_some() {
+                let c = coord.as_ref().unwrap();
+                if grid.is_row_complete(c.row) || grid.is_column_complete(c.column) {
+                    if !grid_results.contains_key(&grid_number) {
+                        // As
+                        let sum: u16 = grid.index.keys().sum();
+                        grid_results.insert(grid_number, sum as u32 * number as u32);
+                        last_grid_number = grid_number;
+                    }
+                }
+            }
+            grid_number += 1;
+        }
+        grid_number = 0;
+    }
+    println!(
+        "For Part 2 : solution is [{:?}]",
+        grid_results.get(&last_grid_number).unwrap()
+    );
 }
