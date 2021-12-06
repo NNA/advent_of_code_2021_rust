@@ -16,7 +16,6 @@ fn main() {
     #[derive(Debug, Clone)]
     struct Grid {
         index: GridIndex,
-        content: Vec<Vec<u16>>,
     }
 
     #[derive(Debug, PartialEq, Hash, Clone)]
@@ -34,7 +33,6 @@ fn main() {
         start: Coordinate,
         end: Coordinate,
     }
-    //20687-7142=13545
 
     impl Segment {
         fn points(&self, counting_diagonals: bool) -> Vec<Coordinate> {
@@ -138,7 +136,6 @@ fn main() {
         fn default() -> Self {
             Grid {
                 index: HashMap::new(),
-                content: vec![vec![]],
             }
         }
     }
