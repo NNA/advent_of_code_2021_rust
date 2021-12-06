@@ -12,8 +12,6 @@ fn main() {
 
     #[derive(Debug, Clone)]
     struct Grid {
-        row_count: Option<u16>,
-        column_count: Option<u16>,
         index: GridIndex,
         content: [[Option<u16>; 5]; 5],
     }
@@ -68,8 +66,6 @@ fn main() {
     impl Default for Grid {
         fn default() -> Self {
             Grid {
-                row_count: None,
-                column_count: None,
                 index: HashMap::new(),
                 content: [[Some(0 as u16); 5]; 5],
             }
