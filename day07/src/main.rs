@@ -62,9 +62,27 @@ fn main() {
             }
             army_lowest_required_fuel
         }
+
+        fn least_fuel_to_align_part2(&self) -> usize {
+            let mut army_lowest_required_fuel = usize::MAX;
+            for candidate_pos in self.min_position()..=self.max_position() {
+                let army_candidate_required_fuel =
+                    self.positions.iter().fold(0usize, |sum, current| {
+                        let diff = current.abs_diff(candidate_pos);
+                        let cost = (1usize..=diff).into_iter().fold(0, |sum, x| sum + x);
+                        sum + cost
+                    });
+
+                if army_candidate_required_fuel < army_lowest_required_fuel {
+                    army_lowest_required_fuel = army_candidate_required_fuel;
+                }
+            }
+            army_lowest_required_fuel
+        }
     }
 
     // // Part 1
     let army = CrabsArmy::new(content);
-    println!("Least fuel {}", army.least_fuel_to_align());
+    println!("Part 1 : Least fuel {}", army.least_fuel_to_align());
+    println!("Part 2 : Least fuel {}", army.least_fuel_to_align_part2());
 }
