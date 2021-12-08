@@ -27,6 +27,12 @@ fn main() {
         positions: Vec<usize>,
     }
 
+    #[derive(Debug)]
+    enum DayPart {
+        Part1,
+        Part2,
+    }
+
     impl CrabsArmy {
         fn new(positions_str: String) -> Self {
             let start_positions: Vec<usize> = positions_str
@@ -48,30 +54,20 @@ fn main() {
             *self.positions.iter().max().unwrap()
         }
 
-        fn least_fuel_to_align(&self) -> usize {
-            let mut army_lowest_required_fuel = usize::MAX;
-            for candidate_pos in self.min_position()..=self.max_position() {
-                let army_candidate_required_fuel = self
-                    .positions
-                    .iter()
-                    .fold(0usize, |sum, current| sum + current.abs_diff(candidate_pos));
-
-                if army_candidate_required_fuel < army_lowest_required_fuel {
-                    army_lowest_required_fuel = army_candidate_required_fuel;
-                }
-            }
-            army_lowest_required_fuel
-        }
-
-        fn least_fuel_to_align_part2(&self) -> usize {
+        fn least_fuel_to_align(&self, daypart: DayPart) -> usize {
             let mut army_lowest_required_fuel = usize::MAX;
             for candidate_pos in self.min_position()..=self.max_position() {
                 let army_candidate_required_fuel =
-                    self.positions.iter().fold(0usize, |sum, current| {
-                        let diff = current.abs_diff(candidate_pos);
-                        let cost = (1usize..=diff).into_iter().fold(0, |sum, x| sum + x);
-                        sum + cost
-                    });
+                    self.positions
+                        .iter()
+                        .fold(0usize, |sum, current| match daypart {
+                            DayPart::Part1 => sum + current.abs_diff(candidate_pos),
+                            DayPart::Part2 => {
+                                let diff = current.abs_diff(candidate_pos);
+                                let cost = (1usize..=diff).into_iter().fold(0, |sum, x| sum + x);
+                                sum + cost
+                            }
+                        });
 
                 if army_candidate_required_fuel < army_lowest_required_fuel {
                     army_lowest_required_fuel = army_candidate_required_fuel;
@@ -83,6 +79,12 @@ fn main() {
 
     // // Part 1
     let army = CrabsArmy::new(content);
-    println!("Part 1 : Least fuel {}", army.least_fuel_to_align());
-    println!("Part 2 : Least fuel {}", army.least_fuel_to_align_part2());
+    println!(
+        "Part 1 : Least fuel {}",
+        army.least_fuel_to_align(DayPart::Part1)
+    );
+    println!(
+        "Part 2 : Least fuel {}",
+        army.least_fuel_to_align(DayPart::Part2)
+    );
 }
