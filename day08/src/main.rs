@@ -43,10 +43,8 @@ fn main() {
 
     impl SignalPattern {
         fn new(wires: String) -> Self {
-            let mut chars: Vec<char> = wires.chars().collect();
-            // chars.sort();
             Self {
-                active_wires: chars,
+                active_wires: wires.chars().collect(),
             }
         }
 
@@ -67,10 +65,6 @@ fn main() {
                     break;
                 }
             }
-            println!(
-                "looking if {:?} contain all from {:?} answer is {:?}",
-                self.active_wires, other.active_wires, res
-            );
             res
         }
     }
@@ -89,10 +83,8 @@ fn main() {
 
     impl DisplayDigit {
         fn new(wires: String) -> Self {
-            let mut chars: Vec<char> = wires.chars().collect();
-            // chars.sort();
             Self {
-                active_wires: chars,
+                active_wires: wires.chars().collect(),
             }
         }
 
@@ -170,9 +162,7 @@ fn main() {
     //Part 2
     notes.into_iter().enumerate().for_each(|(i, note_entry)| {
         let mut deduced: HashMap<usize, &SignalPattern> = HashMap::new();
-        let mut decoded_numbers: Vec<String> = vec![];
-
-        // let clone = note_entry.clone();
+        let mut decoded_digits: Vec<String> = vec![];
 
         // Identify digit 1, 7, 4 and 8 using unique length
         note_entry.signal_patterns.iter().for_each(|signal| {
@@ -267,41 +257,29 @@ fn main() {
             }
         });
 
-        println!("Number of digits deduced {:?}", deduced.len());
-        println!("deduced {:?}", deduced);
-
+        // Reverse the deduced hash : keys are now a sorted string of Signal Patterns.
         let mut reverse: HashMap<String, String> = HashMap::new();
-
-        // reverse.insert(v.to_string(), k)
-
         deduced.into_iter().for_each(|(k, v)| {
-            // println!("v.to_string() {:?}", v.to_string());
-            // let _res = reverse.insert(v.to_string(), k);
-
             let mut chars: Vec<char> = v.active_wires.to_owned();
             chars.sort();
-
             let _res = reverse.insert(chars.iter().collect::<String>(), k.to_string());
         });
 
-        println!("reverse {:?}", reverse);
-
+        // Seek patterns and decode the 4 digit in output
         note_entry.output_value.iter().for_each(|digit| {
             let mut sorted_digit: Vec<char> = digit.active_wires.to_owned();
             sorted_digit.sort();
 
             let pattern = sorted_digit.iter().collect::<String>();
-            println!("looking for pattern {:?}", &pattern);
-            let matching_digit: &String = reverse.get(&pattern).unwrap();
-            println!("matching_digit {:?}", &matching_digit);
-            decoded_numbers.push(matching_digit.to_owned());
+            let matching_digit: String = reverse.get(&pattern).unwrap().to_string();
+
+            decoded_digits.push(matching_digit);
         });
 
-        let output_value: String = decoded_numbers.to_owned().into_iter().collect();
-        println!("output_value {:?}", output_value);
-
+        // Append 4 digits into an integer add sum it
+        let output_value: String = decoded_digits.into_iter().collect();
         total += output_value.parse::<usize>().unwrap();
     });
 
-    println!("total {:?}", total);
+    println!("Part 2 solution is {:?}", total);
 }
