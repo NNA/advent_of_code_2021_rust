@@ -5,7 +5,7 @@ use std::path::Path;
 
 fn main() {
     // Create a path to the desired file
-    let path = Path::new("input.txt");
+    let path = Path::new("input_test.txt");
     let display = path.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
@@ -101,28 +101,33 @@ fn main() {
 
         fn adjacents_of(&self, loc: Location) -> Vec<Location> {
             let mut v: Vec<Location> = vec![];
-            v.push(Location::new(
-                loc.column.overflowing_sub(1).0,
-                loc.row.overflowing_sub(1).0,
-            ));
-            v.push(Location::new(loc.column, loc.row.overflowing_sub(1).0));
-            v.push(Location::new(
-                loc.column.saturating_add(1),
-                loc.row.overflowing_sub(1).0,
-            ));
 
-            v.push(Location::new(loc.column.overflowing_sub(1).0, loc.row));
-            v.push(Location::new(loc.column.saturating_add(1), loc.row));
+            if loc.column > 0 && loc.row > 0 {
+                v.push(Location::new(loc.column - 1, loc.row - 1));
+            }
+            if loc.row > 0 {
+                v.push(Location::new(loc.column, loc.row - 1));
+            }
+            if loc.column < self.col_count && loc.row > 0 {
+                v.push(Location::new(loc.column + 1, loc.row - 1));
+            }
 
-            v.push(Location::new(
-                loc.column.overflowing_sub(1).0,
-                loc.row.saturating_add(1),
-            ));
-            v.push(Location::new(loc.column, loc.row.saturating_add(1)));
-            v.push(Location::new(
-                loc.column.saturating_add(1),
-                loc.row.saturating_add(1),
-            ));
+            if loc.column > 0 {
+                v.push(Location::new(loc.column - 1, loc.row));
+            }
+            if loc.column < self.col_count {
+                v.push(Location::new(loc.column + 1, loc.row));
+            }
+
+            if loc.column > 0 && loc.row < self.row_count {
+                v.push(Location::new(loc.column - 1, loc.row + 1));
+            }
+            if loc.row < self.row_count {
+                v.push(Location::new(loc.column, loc.row + 1));
+            }
+            if loc.column < self.col_count && loc.row < self.row_count {
+                v.push(Location::new(loc.column + 1, loc.row + 1));
+            }
             v
         }
     }
@@ -130,7 +135,6 @@ fn main() {
     // Part 1: Create map & Search low points
     let mut m = Map::new(content);
     m.compute_lowest_points();
-    // println!("m.lowest_set {:?}", m.lowest);
     let l: LowestMap = m.lowest.unwrap();
     println!("Part 1 : Solution is {:?}", l.values().sum::<usize>());
 }
