@@ -20,14 +20,14 @@ fn main() {
         Ok(_) => (),
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     enum Status {
         Complete,
         Incomplete,
         Corrupted,
     }
 
-    type Score = u32;
+    type Score = u64;
 
     fn is_closing_for(open_char: char, closing_char: char) -> bool {
         match (open_char, closing_char) {
@@ -36,12 +36,32 @@ fn main() {
         }
     }
 
-    fn illegal_char_score(c: char) -> u32 {
+    fn matching_closing_char_for(open_char: char) -> char {
+        match open_char {
+            '(' => ')',
+            '[' => ']',
+            '{' => '}',
+            '<' => '>',
+            _ => panic!("No Closing caracter matching {}", open_char),
+        }
+    }
+
+    fn illegal_char_score(c: char) -> u64 {
         match c {
             ')' => 3,
             ']' => 57,
             '}' => 1197,
             '>' => 25137,
+            _ => 0,
+        }
+    }
+
+    fn completed_char_score(c: char) -> u64 {
+        match c {
+            ')' => 1,
+            ']' => 2,
+            '}' => 3,
+            '>' => 4,
             _ => 0,
         }
     }
@@ -70,17 +90,39 @@ fn main() {
                 _ => (),
             };
         }
-        if stack.len() == 0 {
-            status = Status::Complete
+        if status != Status::Corrupted {
+            if stack.len() == 0 {
+                status = Status::Complete;
+            } else {
+                status = Status::Incomplete;
+                score = 0;
+                while let Some(x) = stack.pop() {
+                    let matching_char = matching_closing_char_for(x);
+                    score = (score * 5) + completed_char_score(matching_char);
+                }
+            }
         }
         (status, score)
     }
 
     // Part 1: Find corrupted lines & compute score
-    let mut total_score = 0;
+    let mut total_corrupted_score = 0;
+    let incomplete_score: u64;
+    let mut incomplete_scores: Vec<u64> = vec![];
+
     for line in content.lines() {
         let res = parse_line(line);
-        total_score += res.1;
+        match res.0 {
+            Status::Corrupted => total_corrupted_score += res.1,
+            Status::Incomplete => incomplete_scores.push(res.1),
+            _ => (),
+        }
     }
-    println!("Part 1: solution is : {:?}", total_score);
+
+    incomplete_scores.sort();
+    let index = incomplete_scores.len() / 2; // No need to add 1 because vec index starts at 0
+    incomplete_score = *incomplete_scores.get(index).unwrap();
+
+    println!("Part 1: solution is : {:?}", total_corrupted_score);
+    println!("Part 2: solution is : {:?}", incomplete_score);
 }
