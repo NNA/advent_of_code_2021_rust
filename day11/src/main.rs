@@ -137,6 +137,8 @@ fn main() {
         }
     }
 
+    let content_clone = content.clone();
+
     // Part 1: Create map & Search low points
     let mut g = Grid::new(content);
     let mut flash_counter = 0;
@@ -146,4 +148,12 @@ fn main() {
         flash_counter += flashings.iter().count();
     }
     println!("Part 1 : Solution is {:?}", flash_counter);
+
+    let mut g2 = Grid::new(content_clone);
+    let mut step = 1;
+    while g2.do_step().iter().count() != 100 {
+        step += 1;
+        // println!("Step {} => {:?}", i, flashings.iter().count());
+    }
+    println!("Part 2 : Solution is {:?}", step);
 }
