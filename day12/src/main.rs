@@ -1,9 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::ops::Index;
-use std::path::{self, Path};
-use std::{thread, time};
+use std::path::Path;
 
 fn main() {
     // Create a path to the desired file
@@ -23,18 +21,17 @@ fn main() {
         Ok(_) => (),
     }
 
-    // #[derive(Debug)]
-    // struct CavePap {
-    //     index: HashMap<str, Vec<str>>,
-    // }
-
     type CaveMap = HashMap<String, Vec<String>>;
 
     let mut map: CaveMap = CaveMap::new();
 
     trait Segmentable {
         fn add_segment(&mut self, start: &str, end: &str);
-        fn traverse(&mut self, paths: Vec<Vec<String>>) -> Vec<Vec<String>>;
+        fn traverse(
+            &mut self,
+            paths: Vec<Vec<String>>,
+            allow_small_twice: bool,
+        ) -> Vec<Vec<String>>;
     }
 
     impl Segmentable for CaveMap {
@@ -47,15 +44,16 @@ fn main() {
                 .push(start.to_string());
         }
 
-        fn traverse(&mut self, paths: Vec<Vec<String>>) -> Vec<Vec<String>> {
-            // println!("******** NEW traverse");
-            // println!("paths {:?}", paths);
+        fn traverse(
+            &mut self,
+            paths: Vec<Vec<String>>,
+            allow_small_twice: bool,
+        ) -> Vec<Vec<String>> {
             let mut cloned_paths = paths.clone();
             let mut added = false;
             let mut new_paths: Vec<Vec<String>> = vec![];
 
             while let Some(path) = cloned_paths.pop() {
-                // println!("poping path {:?}", path);
                 let last_element = path.last().unwrap();
                 if *last_element == "end".to_string() {
                     new_paths.push(path);
@@ -66,8 +64,29 @@ fn main() {
                         let base_path = path.clone();
                         neighborlist.iter().for_each(|neighbor| {
                             let visited = path.contains(neighbor);
-                            let allowed_multiple = *neighbor == neighbor.to_uppercase();
-                            if (allowed_multiple || !visited) {
+                            let big_cave = *neighbor == neighbor.to_uppercase();
+                            let mut can_be_visited_twice = allow_small_twice;
+
+                            if allow_small_twice {
+                                let mut dedup_path: Vec<String> = path
+                                    .clone()
+                                    .into_iter()
+                                    .filter(|x| *x != x.to_uppercase())
+                                    .collect();
+                                let ref_path: Vec<String> = path
+                                    .clone()
+                                    .into_iter()
+                                    .filter(|x| *x != x.to_uppercase())
+                                    .collect();
+                                dedup_path.sort();
+                                dedup_path.dedup();
+                                can_be_visited_twice = (neighbor != "start")
+                                    && (neighbor != "end")
+                                    && (dedup_path.len() == ref_path.len());
+                            }
+
+                            // println!("can be visited twice {:?}", can_be_visited_twice);
+                            if big_cave || !visited || can_be_visited_twice {
                                 let mut cloned = base_path.clone();
                                 cloned.push(neighbor.clone());
                                 // println!("new ongoing path {:?}", cloned);
@@ -83,7 +102,7 @@ fn main() {
             // println!("new_paths {:?}", new_paths);
             if added {
                 // At least one path has increased, we need to try to increase it.
-                self.traverse(new_paths)
+                self.traverse(new_paths, allow_small_twice)
             } else {
                 // No paths added, we cannot continue => we only ouput those that end at "end"
                 paths
@@ -101,8 +120,10 @@ fn main() {
     }
 
     // Traverse recursively
-    let res = map.traverse(vec![vec!["start".to_string()]]);
+    let res = map.traverse(vec![vec!["start".to_string()]], false);
+    let res2 = map.traverse(vec![vec!["start".to_string()]], true);
 
     // println!("res {:?}", res);
     println!("Part1 : Solution is {:?}", res.len());
+    println!("Part2 : Solution is {:?}", res2.len());
 }
