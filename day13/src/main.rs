@@ -1,12 +1,14 @@
+use std::borrow::BorrowMut;
+use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fs::File;
-use std::io::{BufRead, Read};
+use std::io::Read;
 use std::path::Path;
 
-#[derive(Debug, PartialEq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 struct Coordinate {
-    x: i16,
-    y: i16,
+    x: u16,
+    y: u16,
 }
 
 #[derive(Debug, PartialEq)]
@@ -17,7 +19,7 @@ enum Direction {
 
 type Position = u16;
 type Fold = (Direction, Position);
-type PaperIndex = HashSet<Coordinate>;
+type PaperIndex = Vec<Coordinate>;
 
 #[derive(Debug, PartialEq)]
 struct Paper {
@@ -35,19 +37,14 @@ impl Paper {
         let foldings_str = split.next().unwrap();
 
         for coord in coords_str.lines() {
-            println!("coord {:?}", coord);
-            // if line == "" {
-            //     break;
-            // }
             let mut iter = coord.split(",");
-            index.insert(Coordinate {
+            index.push(Coordinate {
                 x: iter.next().unwrap().to_string().parse().unwrap(),
                 y: iter.next().unwrap().to_string().parse().unwrap(),
             });
         }
 
         for fold in foldings_str.lines() {
-            println!("fold {:?}", fold);
             let split = fold.split(" ");
             let mut iter = split.last().unwrap().split("=");
             let direction = match iter.next() {
@@ -58,24 +55,66 @@ impl Paper {
             foldings.push((direction, iter.next().unwrap().parse().unwrap()));
         }
 
+        // So we can pop() all foldings
+        foldings.reverse();
+
         Paper {
             index: index,
             foldings: foldings,
         }
     }
 
-    fn fold(&self) {
-        println!("doing nothing");
+    fn fold_once(&mut self) {
+        if let Some((direction, position)) = self.foldings.pop() {
+            let mut folded = vec![];
+            while let Some(coord) = self.index.pop() {
+                match direction {
+                    Direction::X => match coord.x.partial_cmp(&position).unwrap() {
+                        Ordering::Greater => {
+                            folded.push(Coordinate {
+                                x: position - (coord.x - position),
+                                y: coord.y,
+                            });
+                        }
+                        Ordering::Less => {
+                            folded.push(Coordinate {
+                                x: coord.x,
+                                y: coord.y,
+                            });
+                        }
+                        Ordering::Equal => (),
+                    },
+                    Direction::Y => match coord.y.partial_cmp(&position).unwrap() {
+                        Ordering::Greater => {
+                            folded.push(Coordinate {
+                                x: coord.x,
+                                y: position - (coord.y - position),
+                            });
+                        }
+                        Ordering::Less => {
+                            folded.push(Coordinate {
+                                x: coord.x,
+                                y: coord.y,
+                            });
+                        }
+                        Ordering::Equal => (),
+                    },
+                };
+            }
+            folded.sort();
+            folded.dedup();
+            self.index = folded;
+        }
     }
-}
 
-impl Eq for Coordinate {
-    // add code here
+    fn visible_dot_count(self) -> usize {
+        self.index.len()
+    }
 }
 
 fn main() {
     // Create a path to the desired file
-    let path = Path::new("input_test.txt");
+    let path = Path::new("input.txt");
     let display = path.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
@@ -91,26 +130,29 @@ fn main() {
         Ok(_) => (),
     }
 
-    let paper: Paper = Paper::new(content);
+    let mut paper: Paper = Paper::new(content);
+    paper.fold_once();
+    let result = paper.visible_dot_count();
+    println!("Part1 result is {:?}", result);
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{Coordinate, Direction, Paper};
-    use std::collections::HashSet;
+    // use std::collections::HashSet;
 
-    const CONTENT: &str = r#"6,10
+    const SIMPLE_CONTENT: &str = r#"6,10
 0,14
 
 fold along y=7"#;
 
     #[test]
     fn it_can_properly_initialize_a_paper() {
-        let expected_paper: Paper = Paper::new(CONTENT.to_string());
+        let expected_paper: Paper = Paper::new(SIMPLE_CONTENT.to_string());
 
-        let mut i = HashSet::new();
-        i.insert(Coordinate { x: 6, y: 10 });
-        i.insert(Coordinate { x: 0, y: 14 });
+        let mut i = vec![];
+        i.push(Coordinate { x: 6, y: 10 });
+        i.push(Coordinate { x: 0, y: 14 });
 
         let mut f = vec![];
         f.push((Direction::Y, 7));
@@ -124,11 +166,23 @@ fold along y=7"#;
         );
     }
 
-    // #[test]
-    // fn it_can_fold_once() {
-    //     let paper: Paper = Paper::new(CONTENT.to_string());
-    //     paper.fold();
+    #[test]
+    fn it_can_fold() {
+        let mut expected_paper: Paper = Paper::new(SIMPLE_CONTENT.to_string());
+        expected_paper.fold();
 
-    //     assert_eq!(2 + 2, 4);
-    // }
+        let mut i = vec![];
+        i.push(Coordinate { x: 0, y: 0 });
+        i.push(Coordinate { x: 6, y: 4 });
+
+        let f = vec![];
+
+        assert_eq!(
+            expected_paper,
+            Paper {
+                index: i,
+                foldings: f
+            }
+        );
+    }
 }
